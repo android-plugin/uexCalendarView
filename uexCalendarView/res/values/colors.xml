@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<resources>
+	 <!-- plugin_uexCalendarView -->
+    <color name="plugin_uexCalendarView_cv_focusedMonthDateColor">#FFFFFFFF</color>
+    <color name="plugin_uexCalendarView_cv_unfocusedMonthDateColor">#66FFFFFF</color>
+    <color name="plugin_uexCalendarView_cv_weekNumberColor">#33FFFFFF</color>
+    <color name="plugin_uexCalendarView_cv_weekSeparatorLineColor">#19FFFFFF</color>
+    <color name="plugin_uexCalendarView_cv_light_gray_color">#999999</color>
+</resources>
