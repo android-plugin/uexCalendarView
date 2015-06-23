@@ -1,35 +1,36 @@
 package org.zywx.wbpalmstar.plugin.uexCalendarView;
 
 import java.io.Serializable;
+import java.text.ParseException;
+import java.text.SimpleDateFormat;
+import java.util.Date;
 
+import org.json.JSONException;
 import org.json.JSONObject;
 import org.zywx.wbpalmstar.engine.EBrowserView;
 import org.zywx.wbpalmstar.engine.universalex.EUExBase;
 
-import android.app.Activity;
-import android.app.ActivityGroup;
-import android.app.LocalActivityManager;
 import android.content.Context;
-import android.content.Intent;
+import android.graphics.Color;
 import android.os.Bundle;
 import android.os.Message;
 import android.view.Gravity;
 import android.view.View;
-import android.view.Window;
 import android.widget.FrameLayout;
 import android.widget.RelativeLayout;
 
 @SuppressWarnings({ "deprecation", "serial" })
 public class EUExCalendarView extends EUExBase implements Serializable {
-	
-	private LocalActivityManager mgr;
+
+    private final java.text.DateFormat mDateFormat = new SimpleDateFormat("yyyy-MM-dd");
+    private CalendarView myCalendarView;
+
 	private String activityId;
 	public static final String SCRIPT_HEADER = "javascript:";
 	public static final String CALLBACK_ONITEMCLICK = "uexCalendarView.onItemClick";
-
+    private static final String DEFAULT_VIEW_ID="plugin_calendar_view_id";
 	public EUExCalendarView(Context context, EBrowserView inParent) {
 		super(context, inParent);
-		mgr = ((ActivityGroup)mContext).getLocalActivityManager();
 		activityId = ECalendarViewUtils.CALENDAR_PARAMS_KEY_ACTIVITYID + this.hashCode();
 	}
 
@@ -73,30 +74,42 @@ public class EUExCalendarView extends EUExBase implements Serializable {
 	}
 
 	private void handleInCalendar(Message msg) {
-		Activity activity = mgr.getActivity(activityId);
-		if (activity != null && activity instanceof ECalendarViewActivity) {
-			ECalendarViewActivity eCalendarViewActivity = ((ECalendarViewActivity) activity);
 			String[] params = msg.getData().getStringArray(ECalendarViewUtils.CALENDAR_PARAMS_KEY_FUNCTION);
 			switch (msg.what) {
 			case ECalendarViewUtils.CALENDAR_MSG_CODE_SETSELECTEDDATE:
-				handleSetSelectedDate(params, eCalendarViewActivity);
+				handleSetSelectedDate(params);
 				break;
 			case ECalendarViewUtils.CALENDAR_MSG_CODE_CLOSE:
-				handleClose(params, eCalendarViewActivity);
+				handleClose(params);
 				break;
 			}
-		}
 	}
 
-	private void handleClose(String[] params,
-			ECalendarViewActivity eCalendarViewActivity) {
-		View decorView = eCalendarViewActivity.getWindow().getDecorView();
-		removeViewFromCurrentWindow(decorView);
-		mgr.destroyActivity(activityId, true);
+    public void setSelectDate(String dateStr) {
+        try {
+            Date date = mDateFormat.parse(dateStr);
+            if (date != null) {
+                myCalendarView.setDate(date.getTime());
+            }
+        } catch (ParseException e) {
+        }
+    }
+
+	private void handleClose(String[] params) {
+        if (params==null||params.length==0){
+            removeViewFromWebView(DEFAULT_VIEW_ID);
+            return;
+        }
+        String jsonData=params[0];
+        try {
+
+            JSONObject jsonObject=new JSONObject(jsonData);
+            removeViewFromWebView(jsonObject.optString(ECalendarViewUtils.CALENDAR_PARAMS_KEY_ID,DEFAULT_VIEW_ID));
+        } catch (JSONException e) {
+        }
 	}
 
-	private void handleSetSelectedDate(String[] params,
-			ECalendarViewActivity eCalendarViewActivity) {
+	private void handleSetSelectedDate(String[] params) {
 		if (params == null || params.length != 1) {
 			return;
 		}
@@ -104,7 +117,7 @@ public class EUExCalendarView extends EUExBase implements Serializable {
 		if(str == null) {
 			return;
 		}
-		eCalendarViewActivity.setSelectDate(str);
+		setSelectDate(str);
 	}
 
 	private void handleOpen(Message msg) {
@@ -114,28 +127,26 @@ public class EUExCalendarView extends EUExBase implements Serializable {
 		}
 		try {
 			JSONObject json = new JSONObject(params[0]);
-			float x = Float.parseFloat(json.getString(ECalendarViewUtils.CALENDAR_PARAMS_KEY_X));
-			float y = Float.parseFloat(json.getString(ECalendarViewUtils.CALENDAR_PARAMS_KEY_Y));
-			float w = Float.parseFloat(json.getString(ECalendarViewUtils.CALENDAR_PARAMS_KEY_W));
-			float h = Float.parseFloat(json.getString(ECalendarViewUtils.CALENDAR_PARAMS_KEY_H));
-			Intent intent = new Intent(mContext, ECalendarViewActivity.class);
-			ECalendarViewActivity eCalendarViewActivity = (ECalendarViewActivity) mgr.getActivity(activityId);
-			if (eCalendarViewActivity != null) {
-				View view = eCalendarViewActivity.getWindow().getDecorView();
-				removeViewFromCurrentWindow(view);
-				mgr.destroyActivity(activityId, true);
-				view = null;
-			}
-			intent.putExtra(ECalendarViewUtils.CALENDAR_PARAMS_KEY_OBJ, this);
-			Window window = mgr.startActivity(activityId, intent);
-			View decorView = window.getDecorView();
-			RelativeLayout.LayoutParams lp = new RelativeLayout.LayoutParams((int) w, (int) h);
-			lp.topMargin = (int) y;
-			lp.leftMargin = (int) x;
-			addView2CurrentWindow(decorView, lp);
+			int x = Integer.parseInt(json.getString(ECalendarViewUtils.CALENDAR_PARAMS_KEY_X));
+            int y = Integer.parseInt(json.getString(ECalendarViewUtils.CALENDAR_PARAMS_KEY_Y));
+            int w = Integer.parseInt(json.getString(ECalendarViewUtils.CALENDAR_PARAMS_KEY_W));
+            int h = Integer.parseInt(json.getString(ECalendarViewUtils.CALENDAR_PARAMS_KEY_H));
+            String id=json.optString(ECalendarViewUtils.CALENDAR_PARAMS_KEY_ID,DEFAULT_VIEW_ID);
+            myCalendarView=new CalendarView(mContext);
+            myCalendarView.setBackgroundColor(Color.WHITE);
+            myCalendarView.setOnDateChangeListener(new CalendarView.OnDateChangeListener() {
 
-		} catch (Exception e) {
-			e.printStackTrace();
+                @Override
+                public void onSelectedDayChange(CalendarView calendarView,
+                                                int year, int month, int day) {
+                    callBack(year, month + 1, day);
+                }
+
+            });
+            android.widget.AbsoluteLayout.LayoutParams layoutParams=
+                    new android.widget.AbsoluteLayout.LayoutParams(w,h,x,y);
+            addViewToWebView(myCalendarView,layoutParams,id);
+        } catch (Exception e) {
 		}
 	}
 	
