@@ -18,6 +18,7 @@ public class ECalendarViewUtils {
 	public static final String CALENDAR_PARAMS_KEY_Y = "y";
 	public static final String CALENDAR_PARAMS_KEY_W = "w";
 	public static final String CALENDAR_PARAMS_KEY_H = "h";
+    public static final String CALENDAR_PARAMS_KEY_ID="id";
 	
 	public static final String CALENDAR_PARAMS_KEY_DATE = "date";
 	public static final String CALENDAR_PARAMS_KEY_YEAR = "year";
