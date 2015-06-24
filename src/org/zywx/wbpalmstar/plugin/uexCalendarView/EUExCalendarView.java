@@ -36,7 +36,6 @@ public class EUExCalendarView extends EUExBase implements Serializable {
 
 	@Override
 	protected boolean clean() {
-		close(null);
 		return false;
 	}
 	public void open(String[] params) {
@@ -96,6 +95,9 @@ public class EUExCalendarView extends EUExBase implements Serializable {
     }
 
 	private void handleClose(String[] params) {
+		if (mBrwView==null){
+			return;
+		}
         if (params==null||params.length==0){
             removeViewFromWebView(DEFAULT_VIEW_ID);
             return;
