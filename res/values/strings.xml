@@ -49,4 +49,5 @@
     <string name="platform_myspace_loading">加载中...</string>
     <string name="platform_myspace_tap_to_refresh">点击刷新推荐列表</string>
 
+    <string name="plugin_uexCalendarView_today">今</string>
 </resources>

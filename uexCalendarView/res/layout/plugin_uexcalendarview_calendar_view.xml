@@ -38,7 +38,7 @@
             android:layout_alignParentRight="true"
             android:paddingBottom="10dip"
             android:paddingTop="10dip"
-            android:text="今"
+            android:text="@string/plugin_uexCalendarView_today"
             android:textSize="18sp"
             android:textColor="#1F80C3" />
     </RelativeLayout>

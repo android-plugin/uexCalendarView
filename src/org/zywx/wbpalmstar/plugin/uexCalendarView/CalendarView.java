@@ -1073,7 +1073,7 @@ public class CalendarView extends FrameLayout implements OnClickListener {
 						Date nowDate = mDateFormat.parse(cellDateStr);
 						if (nowCellDate.equals(nowDate) && mFocusDay[i]) {
 							mMonthNumDrawPaint.setColor(getResources().getColor(android.R.color.holo_red_light));
-							canvas.drawText("今", x, y, mMonthNumDrawPaint);
+							canvas.drawText(mDayNumbers[i], x, y, mMonthNumDrawPaint);
 						} else {
 							canvas.drawText(mDayNumbers[i], x, y, mMonthNumDrawPaint);
 						}
