@@ -1,8 +1,9 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <uexplugins>
-    <plugin uexName="uexCalendarView" version="3.0.2" build="2">
-		<info>2:国际化</info>
+    <plugin build="3" uexName="uexCalendarView" version="3.0.3">
+        <info>3:修复month拼写错误的问题</info>
+        <build>2:国际化</build>
         <build>1:修复日历界面弹动的问题</build>
-		<build>0:日历控件</build>
+        <build>0:日历控件</build>
     </plugin>
 </uexplugins>
