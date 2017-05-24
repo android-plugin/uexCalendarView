@@ -23,6 +23,7 @@ import android.content.Context;
 import android.graphics.Color;
 import android.os.Bundle;
 import android.os.Message;
+import android.text.TextUtils;
 import android.view.Gravity;
 import android.view.View;
 import android.widget.FrameLayout;
@@ -30,13 +31,18 @@ import android.widget.RelativeLayout;
 
 import org.json.JSONException;
 import org.json.JSONObject;
+import org.zywx.wbpalmstar.engine.DataHelper;
 import org.zywx.wbpalmstar.engine.EBrowserView;
 import org.zywx.wbpalmstar.engine.universalex.EUExBase;
+import org.zywx.wbpalmstar.plugin.uexCalendarView.vo.DataItemVO;
+import org.zywx.wbpalmstar.plugin.uexCalendarView.vo.OpenDataVO;
+import org.zywx.wbpalmstar.plugin.uexCalendarView.vo.SelectedDateVO;
 
 import java.io.Serializable;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.Date;
+import java.util.HashMap;
 
 @SuppressWarnings({"deprecation", "serial"})
 public class EUExCalendarView extends EUExBase implements Serializable {
@@ -48,6 +54,8 @@ public class EUExCalendarView extends EUExBase implements Serializable {
     public static final String SCRIPT_HEADER = "javascript:";
     public static final String CALLBACK_ONITEMCLICK = "uexCalendarView.onItemClick";
     private static final String DEFAULT_VIEW_ID = "plugin_calendar_view_id";
+
+    private HashMap<String, DataItemVO> mData = new HashMap<String, DataItemVO>();
 
     public EUExCalendarView(Context context, EBrowserView inParent) {
         super(context, inParent);
@@ -120,14 +128,14 @@ public class EUExCalendarView extends EUExBase implements Serializable {
             return;
         }
         if (params == null || params.length == 0) {
-            removeViewFromWebView(DEFAULT_VIEW_ID);
+            closeView(null);
             return;
         }
         String jsonData = params[0];
         try {
 
             JSONObject jsonObject = new JSONObject(jsonData);
-            removeViewFromWebView(jsonObject.optString(ECalendarViewUtils.CALENDAR_PARAMS_KEY_ID, DEFAULT_VIEW_ID));
+            closeView(jsonObject.optString(ECalendarViewUtils.CALENDAR_PARAMS_KEY_ID, DEFAULT_VIEW_ID));
         } catch (JSONException e) {
         }
     }
@@ -136,7 +144,8 @@ public class EUExCalendarView extends EUExBase implements Serializable {
         if (params == null || params.length != 1) {
             return;
         }
-        String str = ECalendarViewUtils.Json2Str(params);
+        SelectedDateVO selectedDateVO = DataHelper.gson.fromJson(params[0], SelectedDateVO.class);
+        String str = selectedDateVO.getDate().getSelectedDataString();
         if (str == null) {
             return;
         }
@@ -148,28 +157,50 @@ public class EUExCalendarView extends EUExBase implements Serializable {
         if (params == null || params.length != 1) {
             return;
         }
-        try {
-            JSONObject json = new JSONObject(params[0]);
-            int x = Integer.parseInt(json.getString(ECalendarViewUtils.CALENDAR_PARAMS_KEY_X));
-            int y = Integer.parseInt(json.getString(ECalendarViewUtils.CALENDAR_PARAMS_KEY_Y));
-            int w = Integer.parseInt(json.getString(ECalendarViewUtils.CALENDAR_PARAMS_KEY_W));
-            int h = Integer.parseInt(json.getString(ECalendarViewUtils.CALENDAR_PARAMS_KEY_H));
-            String id = json.optString(ECalendarViewUtils.CALENDAR_PARAMS_KEY_ID, DEFAULT_VIEW_ID);
-            myCalendarView = new CalendarView(mContext);
-            myCalendarView.setBackgroundColor(Color.WHITE);
-            myCalendarView.setOnDateChangeListener(new CalendarView.OnDateChangeListener() {
+        OpenDataVO data = DataHelper.gson.fromJson(params[0], OpenDataVO.class);
+        String id = data.getId();
+        if(TextUtils.isEmpty(data.getId())){
+            id = DEFAULT_VIEW_ID;
+        }
 
-                @Override
-                public void onSelectedDayChange(CalendarView calendarView,
-                                                int year, int month, int day) {
-                    callBack(year, month + 1, day);
-                }
+        if(mData.containsKey(id)){
+            closeView(id);
+        }
+        myCalendarView = new CalendarView(mContext);
+        myCalendarView.setBackgroundColor(Color.WHITE);
+        myCalendarView.setOnDateChangeListener(new CalendarView.OnDateChangeListener() {
 
-            });
+            @Override
+            public void onSelectedDayChange(CalendarView calendarView,
+                                            int year, int month, int day) {
+                callBack(year, month + 1, day);
+            }
+
+        });
+        if(data.isScrollWithWebView()){
             android.widget.AbsoluteLayout.LayoutParams layoutParams =
-                    new android.widget.AbsoluteLayout.LayoutParams(w, h, x, y);
+                    new android.widget.AbsoluteLayout.LayoutParams(data.getW(), data.getH(), data.getX(), data.getY());
             addViewToWebView(myCalendarView, layoutParams, id);
-        } catch (Exception e) {
+        }else{
+            RelativeLayout.LayoutParams layoutParams = new RelativeLayout.LayoutParams(data.getW(), data.getH());
+            layoutParams.topMargin = data.getY();
+            layoutParams.leftMargin = data.getX();
+
+            addViewToCurrentWindow(myCalendarView, layoutParams);
+        }
+        mData.put(id, new DataItemVO(data, myCalendarView));
+    }
+
+    private void closeView(String id) {
+        String viewId = id;
+        if(TextUtils.isEmpty(id)){
+            viewId = DEFAULT_VIEW_ID;
+        }
+        OpenDataVO data = mData.get(viewId).getDataVO();
+        if(data.isScrollWithWebView()){
+            removeViewFromWebView(viewId);
+        }else{
+            removeViewFromCurrentWindow(mData.get(viewId).getView());
         }
     }
 
