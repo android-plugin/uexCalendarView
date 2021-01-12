@@ -1,7 +1,8 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <uexplugins>
-    <plugin uexName="uexCalendarView" version="4.0.1" build="1" >
-        <info>1:修改日历不随页面的滚动而滚动</info>
+    <plugin uexName="uexCalendarView" version="4.0.2" build="2021011201" >
+        <info>2:修复关闭UI时重复操作可能导致的闪退问题</info>
+        <build>1:修改日历不随页面的滚动而滚动</build>
         <build>0:4.0插件</build>
     </plugin>
 </uexplugins>
