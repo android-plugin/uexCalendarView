@@ -31,6 +31,7 @@ import android.widget.RelativeLayout;
 
 import org.json.JSONException;
 import org.json.JSONObject;
+import org.zywx.wbpalmstar.base.BDebug;
 import org.zywx.wbpalmstar.engine.DataHelper;
 import org.zywx.wbpalmstar.engine.EBrowserView;
 import org.zywx.wbpalmstar.engine.universalex.EUExBase;
@@ -47,10 +48,11 @@ import java.util.HashMap;
 @SuppressWarnings({"deprecation", "serial"})
 public class EUExCalendarView extends EUExBase implements Serializable {
 
+    private static final String TAG = "EUExCalendarView";
+    
     private final java.text.DateFormat mDateFormat = new SimpleDateFormat("yyyy-MM-dd");
     private CalendarView myCalendarView;
 
-    private String activityId;
     public static final String SCRIPT_HEADER = "javascript:";
     public static final String CALLBACK_ONITEMCLICK = "uexCalendarView.onItemClick";
     private static final String DEFAULT_VIEW_ID = "plugin_calendar_view_id";
@@ -59,7 +61,6 @@ public class EUExCalendarView extends EUExBase implements Serializable {
 
     public EUExCalendarView(Context context, EBrowserView inParent) {
         super(context, inParent);
-        activityId = ECalendarViewUtils.CALENDAR_PARAMS_KEY_ACTIVITYID + this.hashCode();
     }
 
     @Override
@@ -196,11 +197,20 @@ public class EUExCalendarView extends EUExBase implements Serializable {
         if(TextUtils.isEmpty(id)){
             viewId = DEFAULT_VIEW_ID;
         }
-        OpenDataVO data = mData.get(viewId).getDataVO();
-        if(data.isScrollWithWebView()){
-            removeViewFromWebView(viewId);
-        }else{
-            removeViewFromCurrentWindow(mData.get(viewId).getView());
+        try {
+            DataItemVO dataItemVO = mData.get(viewId);
+            if (dataItemVO != null){
+                OpenDataVO data = dataItemVO.getDataVO();
+                if(data.isScrollWithWebView()){
+                    removeViewFromWebView(viewId);
+                }else{
+                    removeViewFromCurrentWindow(dataItemVO.getView());
+                }
+            }else{
+                BDebug.w(TAG, "closeView is null, ignored: viewId=" + viewId);
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
         }
     }
 
